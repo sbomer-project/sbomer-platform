@@ -1,0 +1,49 @@
+{{- if .Values.global.devProfile }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-apicurio
+  labels:
+    app: apicurio
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: apicurio
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-apicurio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apicurio
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: apicurio
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: apicurio
+          image: {{ .Values.infra.apicurio.image }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: APICURIO_STORAGE_KIND
+              value: kafkasql
+            - name: APICURIO_KAFKASQL_BOOTSTRAP_SERVERS
+              value: "{{ .Release.Name }}-kafka:9092"
+          readinessProbe:
+            httpGet:
+              path: /apis/registry/v2
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+{{- end }}

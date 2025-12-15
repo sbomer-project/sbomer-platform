@@ -1,0 +1,61 @@
+{{- if .Values.global.devProfile }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-kafka
+  labels:
+    app: kafka
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - port: 9092
+      targetPort: 9092
+      name: plain
+  selector:
+    app: kafka
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kafka
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: kafka
+          image: {{ .Values.infra.kafka.image }}
+          ports:
+            - containerPort: 9092
+          env:
+            - name: LOG_DIR
+              value: "/var/lib/kafka"
+          # This command formats storage if needed, then starts the server
+          command:
+            - bash
+            - -c
+            - |
+              /opt/kafka/bin/kafka-storage.sh format --config /opt/kafka/config/server.properties --cluster-id 'ciVofVj9T9aU1a3S-n3CBA' --ignore-formatted
+              /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+          volumeMounts:
+            - name: config
+              mountPath: /opt/kafka/config/server.properties
+              subPath: server.properties
+            - name: data
+              mountPath: /var/lib/kafka
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-kafka-config
+        - name: data
+          emptyDir: {} # Use PersistentVolumeClaim for persistence if needed
+{{- end }}

@@ -1,0 +1,44 @@
+# Global settings for the platform
+global:
+  # Set this to 'true' to deploy Kafka/Apicurio inside this chart
+  devProfile: false
+
+# Configuration for the internal Dev infrastructure
+infra:
+  kafka:
+    image: quay.io/strimzi/kafka:latest-kafka-3.7.0
+    storageClass: "standard"
+  apicurio:
+    image: quay.io/apicurio/apicurio-registry:latest
+
+# --- Override Child Charts ---
+# Child components are by default looking at the Kafka and Apicurio instance for devProfile. 
+# Override in prod to point to instances running in prod
+
+manifest-storage-service-chart:
+  config:
+    kafka:
+      # In K8s, the host is the Service name.
+      # Format: <release-name>-kafka.<namespace>.svc
+      bootstrapServers: "sbomer-dev-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-dev-apicurio:8080/apis/registry/v2"
+
+sbom-service-chart:
+  config:
+    kafka:
+      bootstrapServers: "sbomer-dev-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-dev-apicurio:8080/apis/registry/v2"
+
+syft-generator-chart:
+  config:
+    kafka:
+      bootstrapServers: "sbomer-dev-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-dev-apicurio:8080/apis/registry/v2"
+    # In a real K8s cluster, we don't use 'host.containers.internal'.
+    # Quarkus usually auto-detects Kubernetes if RBAC is set up, 
+    # otherwise point to the internal K8s API service:
+    quarkus:
+      kubernetesClientMasterUrl: "https://kubernetes.default.svc" 
+      trustCerts: "false" # Should be false in prod, true in dev
+    # Default internal cluster URL for storage
+    storageUrl: "http://sbomer-dev-manifest-storage-service:8085"

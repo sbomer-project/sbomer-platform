@@ -1,5 +1,5 @@
 apiVersion: v2
-name: sbomer-platform
+name: sbomer-platform-chart
 description: Umbrella chart for SBOMer components and Dev infrastructure
 type: application
 version: 0.1.0

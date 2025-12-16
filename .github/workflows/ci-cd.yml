@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: quay.io
-  HELM_CHART: sbomer-platform
+  HELM_CHART: sbomer-platform-chart
   HELM_REPO: oci://quay.io/sbomer
 
 jobs:

@@ -1,0 +1,89 @@
+name: SBOMer Platform CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  REGISTRY: quay.io
+  HELM_CHART: sbomer-platform
+  HELM_REPO: oci://quay.io/sbomer
+
+jobs:
+
+  publish-chart:
+    name: Publish Helm Chart
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.8.1
+
+      - name: Get short SHA
+        id: sha
+        run: echo "sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      # Update Dependencies in the directory (.)
+      # This looks for Chart.yaml in root, finds dependencies, and puts them in ./charts/
+      - name: Update Chart Dependencies
+        run: helm dependency update .
+
+      - name: Package Helm Chart
+        run: |
+          helm package . \
+            --version "0.1.${{ github.run_number }}" \
+            --app-version "${{ steps.sha.outputs.sha }}"
+
+      - name: Login to Quay (Helm)
+        run: echo "${{ secrets.QUAY_TOKEN }}" | helm registry login quay.io --username "${{ secrets.QUAY_USERNAME }}" --password-stdin
+
+      # Push the resulting tgz
+      - name: Push Chart
+        run: helm push ${{ env.HELM_CHART }}-*.tgz ${{ env.HELM_REPO }}
+
+      - name: Login to Quay (Cosign)
+        run: echo "${{ secrets.QUAY_TOKEN }}" | cosign login quay.io --username "${{ secrets.QUAY_USERNAME }}" --password-stdin
+
+      - name: Sign Helm Chart
+        run: |
+          CLEAN_REPO="${HELM_REPO#oci://}"
+          CHART_NAME="${{ env.HELM_CHART }}"
+          CHART_VERSION="0.1.${{ github.run_number }}"
+          FULL_IMAGE_REF="docker://$CLEAN_REPO/$CHART_NAME:$CHART_VERSION"
+          
+          echo "Resolving digest for $FULL_IMAGE_REF..."
+          
+          for i in {1..5}; do
+            DIGEST=$(skopeo inspect --format '{{.Digest}}' "$FULL_IMAGE_REF" || true)
+            if [ -n "$DIGEST" ]; then
+              break
+            fi
+            echo "Digest not found yet, retrying in 2s..."
+            sleep 2
+          done
+
+          if [ -z "$DIGEST" ]; then
+            echo "Error: Could not retrieve digest for $FULL_IMAGE_REF"
+            exit 1
+          fi
+
+          echo "Found Digest: $DIGEST"
+          CHART_URI_DIGEST="$CLEAN_REPO/$CHART_NAME@$DIGEST"
+          
+          cosign sign -y \
+            -a "repo=${{ github.repository }}" \
+            -a "workflow=${{ github.workflow }}" \
+            -a "sha=${{ github.sha }}" \
+            "$CHART_URI_DIGEST"

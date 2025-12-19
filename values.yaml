@@ -6,6 +6,7 @@ global:
   includeApiGateway: true
   includeStatusDb: true
   includeS3: true
+  includeUI: true
 
 # Configuration for the internal Dev infrastructure
 infra:
@@ -77,3 +78,8 @@ syft-generator-chart:
       trustCerts: "false" # Should be false in prod, true in dev
     # Default internal cluster URL for storage
     storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+
+# ui, configure to point to sbomer-service
+ui-chart:
+  config:
+    apiUrl: "http://localhost:8080"

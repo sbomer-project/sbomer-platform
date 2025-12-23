@@ -6,7 +6,6 @@ global:
   includeApiGateway: true
   includeStatusDb: true
   includeS3: true
-  includeUI: true
 
 # Configuration for the internal Dev infrastructure
 infra:

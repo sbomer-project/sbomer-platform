@@ -56,9 +56,12 @@ data:
                  proxy_pass http://{{ .Release.Name }}-sbom-service-chart:8080;
             }
 
-            # Block everything else
+            # --- UI (Root path) ---
             location / {
-                return 403;
+                proxy_pass http://{{ .Release.Name }}-ui-chart:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             }
         }
     }

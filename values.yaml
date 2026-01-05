@@ -79,6 +79,8 @@ syft-generator-chart:
     storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
 
 # ui, configure to point to sbomer-service
-ui-chart:
+ui-chart:  
   config:
-    apiUrl: "http://localhost:8080"
+    # note: ui is not adapted to work with sbom-service yet
+    # override to connect to backend of your choice
+    apiUrl: http://localhost:8081

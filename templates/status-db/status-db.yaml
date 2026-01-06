@@ -24,11 +24,20 @@ spec:
               name: postgres
           env:
             - name: POSTGRESQL_DATABASE
-              value: {{ .Values.infra.statusDb.env.database | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-status-db-secret
+                  key: postgres-db-name
             - name: POSTGRESQL_USER
-              value: {{ .Values.infra.statusDb.env.user | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-status-db-secret
+                  key: postgres-username
             - name: POSTGRESQL_PASSWORD
-              value: {{ .Values.infra.statusDb.env.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-status-db-secret
+                  key: postgres-password
           # Use ephemeral storage for local dev
           volumeMounts:
             - name: db-data
@@ -40,7 +49,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: status-db
+  name: {{ .Release.Name }}-status-db
   labels:
     app.kubernetes.io/name: status-db
 spec:

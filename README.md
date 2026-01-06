@@ -14,7 +14,7 @@ helm install sbomer-release ./ -n sbomer-test --create-namespace
 ```
 - Then once all the pods are running, port-forward the api gateway:
 ```script
-kubectl port-forward svc/sbomer-release-gateway 8080:8080 -n sbomer (leave open in terminal)
+kubectl port-forward svc/sbomer-release-gateway 8080:8080 -n sbomer-test (leave open in terminal)
 ```
 - We can now go into the sbom-service API to trigger a generation:
 ```script

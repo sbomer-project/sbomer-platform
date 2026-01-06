@@ -64,9 +64,7 @@ sbom-service-chart:
       bootstrapServers: "sbomer-release-kafka:9092"
       schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
     database:
-      url: "jdbc:postgresql://sbomer-release-status-db:5432/sbomer_status" 
-      username: "sbomer"
-      password: "sbomer_password"
+      existingSecret: "sbomer-release-status-db-secret"
 
 syft-generator-chart:
   config:

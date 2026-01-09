@@ -13,7 +13,7 @@ dependencies:
     version: 0.1.5
     repository: "oci://quay.io/sbomer"
   - name: syft-generator-chart
-    version: 0.1.7
+    version: 0.1.8
     repository: "oci://quay.io/sbomer"
   - name: ui-chart
     version: 0.1.6

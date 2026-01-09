@@ -1,0 +1,57 @@
+{{- if .Values.global.includeMockServices }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-wiremock
+  labels:
+    app: wiremock
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wiremock
+  template:
+    metadata:
+      labels:
+        app: wiremock
+    spec:
+      containers:
+        - name: wiremock
+          image: wiremock/wiremock:3.3.1
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            # Mounting the default platform mocks
+            - name: platform-mocks
+              mountPath: /home/wiremock/mappings/platform
+            # Dynamically mounting extra ConfigMaps from internal components
+            {{- range .Values.wiremock.extraMappingConfigMaps }}
+            - name: {{ . }}
+              mountPath: /home/wiremock/mappings/{{ . }}
+            {{- end }}
+      volumes:
+        - name: platform-mocks
+          configMap:
+            name: {{ .Release.Name }}-wiremock-default
+        {{- range .Values.wiremock.extraMappingConfigMaps }}
+        - name: {{ . }}
+          configMap:
+            name: {{ . }}
+        {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-wiremock
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: wiremock
+{{- end }}

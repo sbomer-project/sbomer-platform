@@ -6,7 +6,12 @@ global:
   includeApiGateway: true
   includeStatusDb: true
   includeS3: true
+  includeMockServices: true
 
+wiremock:
+    # Additional configmaps for wiremock can be attached by overriding this by the parent chart
+    extraMappingConfigMaps: []
+      
 # Configuration for the internal Dev infrastructure
 infra:
   # KAFKA CONFIG

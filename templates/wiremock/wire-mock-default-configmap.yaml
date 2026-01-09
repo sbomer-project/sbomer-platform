@@ -1,0 +1,38 @@
+{{- if .Values.global.includeMockServices }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-wiremock-default
+  labels:
+    release: {{ .Release.Name }}
+data:
+  # A health check endpoint for the platform itself
+  health-check.json: |
+    {
+      "request": {
+        "method": "GET",
+        "url": "/healthz"
+      },
+      "response": {
+        "status": 200,
+        "body": "{\"status\": \"WireMock is running within sbomer-platform\"}",
+        "headers": { "Content-Type": "application/json" }
+      }
+    }
+  
+  # A simple Hello World endpoint for testing the connection
+  hello-world.json: |
+    {
+      "request": {
+        "method": "GET",
+        "url": "/hello"
+      },
+      "response": {
+        "status": 200,
+        "body": "Hello from the default WireMock instance in sbomer-platform!",
+        "headers": {
+          "Content-Type": "text/plain"
+        }
+      }
+    }
+{{- end }}

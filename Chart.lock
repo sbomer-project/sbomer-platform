@@ -7,9 +7,9 @@ dependencies:
   version: 0.1.5
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.7
+  version: 0.1.8
 - name: ui-chart
   repository: oci://quay.io/sbomer
   version: 0.1.6
-digest: sha256:3bc81c45100a58928f171a54f4c8191fe8a1bdffa48d550aac55cc1698878daa
-generated: "2025-12-23T11:28:09.96712342+11:00"
+digest: sha256:0ac1d1507f55a05281748369724e0fc4abc92755e8582ce27f2a61c6f33c3960
+generated: "2026-01-09T11:11:13.35008145Z"

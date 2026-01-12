@@ -1,0 +1,77 @@
+{{- if .Values.global.includeUnleash }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-unleash
+  labels:
+    app.kubernetes.io/name: unleash
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unleash
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unleash
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox
+          # Waits for the DB service to respond on port 5432
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-unleash-db 5432; do echo waiting for db; sleep 2; done;']
+      containers:
+        - name: unleash
+          image: {{ .Values.infra.unleash.server.image }}
+          ports:
+            - containerPort: 4242
+              name: http
+          env:
+            # Tells Unleash its public address (for UI links)
+            - name: UNLEASH_URL
+              value: {{ .Values.infra.unleash.server.externalUrl | quote }}
+            # Tells Unleash to serve assets from this subpath
+            - name: BASE_URI_PATH
+              value: {{ .Values.infra.unleash.server.basePath | quote }}
+            - name: DATABASE_HOST
+              value: {{ .Release.Name }}-unleash-db
+            - name: DATABASE_SSL
+              value: "false"
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-unleash-secret
+                  key: postgres-db-name
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-unleash-secret
+                  key: postgres-username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-unleash-secret
+                  key: postgres-password
+            - name: INIT_CLIENT_API_TOKENS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-unleash-secret
+                  key: api-token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-unleash
+  labels:
+    app.kubernetes.io/name: unleash
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.infra.unleash.server.service.port }}
+      targetPort: 4242
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: unleash
+{{- end }}

@@ -7,6 +7,7 @@ global:
   includeStatusDb: true
   includeS3: true
   includeMockServices: true
+  includeUnleash: true
 
 wiremock:
     # Additional configmaps for wiremock can be attached by overriding this by the parent chart
@@ -49,6 +50,24 @@ infra:
     storage:
       size: 5Gi
       persistenceEnabled: false
+  # UNLEASHED CONFIG
+  unleash:
+    db:
+      image: quay.io/fedora/postgresql-16:latest
+      name: unleash
+      username: unleash_user
+      password: unleash_password
+    server:
+      # currently from dockerhub for lack of alternatives, also since it will only be used during local development
+      image: docker.io/unleashorg/unleash-server:latest
+      # The full public URL (used for invites, reset password links, etc.)
+      externalUrl: "http://localhost:8080/unleash"
+      # The subpath where Unleash is mounted (must match your Nginx location)
+      basePath: "/unleash"
+      # Default token from your compose file
+      apiToken: "default:development.unleash-insecure-api-token" 
+      service:
+        port: 4242
 
 # --- Override Child Charts ---
 # Child components are by default looking at the Kafka and Apicurio instances set up by include flags above. 

@@ -40,21 +40,33 @@ data:
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             }
             
-            # --- QUARKUS ENDPOINTS FOR SBOM SERVICE (Swagger, OpenAPI, Health) ---
-            # Swagger UI
+            # --- QUARKUS ENDPOINTS FOR SBOM SERVICE ---
             location /q/swagger-ui {
                  proxy_pass http://{{ .Release.Name }}-sbom-service-chart:8080;
             }
 
-            # OpenAPI Schema (REQUIRED for Swagger UI to load data)
             location /q/openapi {
                  proxy_pass http://{{ .Release.Name }}-sbom-service-chart:8080;
             }
 
-            # 3. Health
             location /q/health {
                  proxy_pass http://{{ .Release.Name }}-sbom-service-chart:8080;
             }
+
+            # --- UNLEASH ---
+            {{- if .Values.global.includeUnleash }}
+            # Uses the same value from values.yaml
+            location {{ .Values.infra.unleash.server.basePath }}/ {
+                proxy_pass http://{{ .Release.Name }}-unleash:4242;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+            {{- end }}
 
             # --- UI (Root path) ---
             location / {

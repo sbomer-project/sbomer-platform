@@ -1,0 +1,56 @@
+{{- if .Values.global.includeStatusDb }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-additional-dbs-init-script
+  labels:
+    release: {{ .Release.Name }}
+data:
+  01-create-additional-dbs.sh: |
+    #!/bin/bash
+    set -e
+
+    # Hardcode 'postgres' to avoid env var confusion
+    ADMIN_USER="postgres"
+
+    echo "DEBUG: Running admin commands as user: '$ADMIN_USER'"
+    
+    echo "Configuring logging to stdout..."
+    echo "logging_collector = off" >> "$PGDATA/postgresql.conf"
+    echo "log_destination = 'stderr'" >> "$PGDATA/postgresql.conf"
+
+    # --- HELPER FUNCTION ---
+    function create_app_db() {
+        local target_db=$1
+        local target_user=$2
+        local target_pass=$3
+        
+        echo "Extension: Provisioning database '$target_db' for user '$target_user'..."
+
+        # 1. Create User
+        # We pipe the SQL string into psql.
+        local user_sql="DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$target_user') THEN CREATE USER \"$target_user\" WITH ENCRYPTED PASSWORD '$target_pass'; END IF; END \$\$;"
+        
+        echo "$user_sql" | psql -v ON_ERROR_STOP=1 -U "$ADMIN_USER" -d postgres
+
+        # 2. Create Database
+        local db_sql="SELECT 'CREATE DATABASE \"$target_db\" OWNER \"$target_user\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$target_db')\\gexec"
+        
+        echo "$db_sql" | psql -v ON_ERROR_STOP=1 -U "$ADMIN_USER" -d postgres
+
+        # 3. Grant Privileges
+        echo "GRANT ALL PRIVILEGES ON DATABASE \"$target_db\" TO \"$target_user\";" | psql -v ON_ERROR_STOP=1 -U "$ADMIN_USER" -d postgres
+        
+        # 4. Schema Access
+        # Connect to the target DB ($target_db) for this command
+        echo "GRANT ALL ON SCHEMA public TO \"$target_user\";" | psql -v ON_ERROR_STOP=1 -U "$ADMIN_USER" -d "$target_db"
+    }
+
+    # --- EXTENSIONS START HERE ---
+
+    {{- if .Values.global.includeUnleash }}
+    create_app_db "$UNLEASH_DB_NAME" "$UNLEASH_DB_USER" "$UNLEASH_DB_PASSWORD"
+    {{- end }}
+
+    echo "All additional databases processed."
+{{- end }}

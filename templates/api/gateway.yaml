@@ -4,7 +4,8 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-gateway
   labels:
-    app: sbomer-gateway
+    app.kubernetes.io/name: sbomer-gateway
+    app: gateway
     release: {{ .Release.Name }}
 spec:
   type: ClusterIP
@@ -13,6 +14,7 @@ spec:
       targetPort: 8080
       name: http
   selector:
+    app.kubernetes.io/name: sbomer-gateway
     app: gateway
 ---
 apiVersion: apps/v1
@@ -20,15 +22,18 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-gateway
   labels:
+    app.kubernetes.io/name: sbomer-gateway
     app: gateway
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/name: sbomer-gateway
       app: gateway
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: sbomer-gateway
         app: gateway
     spec:
       containers:

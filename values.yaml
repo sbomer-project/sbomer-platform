@@ -107,6 +107,5 @@ syft-generator-chart:
 # ui, configure to point to sbomer-service
 ui-chart:  
   config:
-    # note: ui is not adapted to work with sbom-service yet
     # override to connect to backend of your choice
-    apiUrl: http://localhost:8081
+    apiUrl: http://localhost:8080

@@ -10,11 +10,11 @@ dependencies:
     version: 0.1.9
     repository: "oci://quay.io/sbomer"
   - name: sbom-service-chart
-    version: 0.1.9
+    version: 0.1.10
     repository: "oci://quay.io/sbomer"
   - name: syft-generator-chart
     version: 0.1.9
     repository: "oci://quay.io/sbomer"
   - name: ui-chart
-    version: 0.1.11
+    version: 0.1.12
     repository: "oci://quay.io/sbomer"

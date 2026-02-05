@@ -81,6 +81,14 @@ manifest-storage-service-chart:
       # Format: <release-name>-kafka.<namespace>.svc
       bootstrapServers: "sbomer-release-kafka:9092"
       schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    # S3 storage configuration
+    s3:
+      endpoint: "http://sbomer-release-minio:9000"
+      accessKeyId: "minioadmin"
+      secretAccessKey: "minioadmin"
+      bucket: "sboms"
+      pathStyleAccess: "true"
+      region: "us-east-1"
 
 sbom-service-chart:
   config:

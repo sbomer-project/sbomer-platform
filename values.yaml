@@ -8,11 +8,26 @@ global:
   includeS3: true
   includeMockServices: true
   includeUnleash: true
+  # OWASP Dependency Track Instance for uploading/publishing SBOMs, false by default because it is resource intensive
+  # Meant for testing publisher components
+  includeDependencyTrack: false
 
 wiremock:
-    # Additional configmaps for wiremock can be attached by overriding this by the parent chart
-    extraMappingConfigMaps: []
+  # Additional configmaps for wiremock can be attached by overriding this by the parent chart
+  extraMappingConfigMaps: []
       
+dependency-track: 
+  frontend:
+    # This tells the UI to look for the API at this specific URL
+    apiBaseUrl: "http://dtrack.localhost:8080/api"
+  # Use own postgresql pod as default
+  postgresql:
+    enabled: true
+    # Non-persistent by default
+    primary:
+      persistence:
+        enabled: false
+
 # Configuration for the internal Dev infrastructure
 infra:
   # KAFKA CONFIG

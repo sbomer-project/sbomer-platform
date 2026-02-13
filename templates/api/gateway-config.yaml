@@ -76,5 +76,42 @@ data:
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             }
         }
+
+
+        {{- if .Values.global.includeDependencyTrack }}
+        server {
+            listen 8080;
+            server_name dtrack.localhost;
+
+            # 1. API: Strip the "/api/" prefix using the trailing slash
+            location /api/ {
+                proxy_pass http://{{ .Release.Name }}-dependency-track-api-server:8080/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+
+            # 2. Frontend: Catch 404s and redirect to index.html (SPA Support)
+            location / {
+                proxy_pass http://{{ .Release.Name }}-dependency-track-frontend:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+
+                # Intercept 404s from the backend container
+                proxy_intercept_errors on;
+                error_page 404 = @spa_fallback;
+            }
+
+            # 3. The Fallback: Serve index.html (Root) for any missing path
+            location @spa_fallback {
+                # FIX: Remove the trailing slash from proxy_pass
+                # Use rewrite to force the path to /index.html
+                rewrite ^ /index.html break;
+                proxy_pass http://{{ .Release.Name }}-dependency-track-frontend:8080;
+                proxy_set_header Host $host;
+            }
+        }
+        {{- end }}
+
+
     }
 {{- end }}

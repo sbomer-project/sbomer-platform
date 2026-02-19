@@ -4,12 +4,12 @@ dependencies:
   version: 0.1.12
 - name: sbom-service-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.17
+  version: 0.1.18
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.10
 - name: ui-chart
   repository: oci://quay.io/sbomer
   version: 0.1.20
-digest: sha256:6ace4c24d6318c918ccb8697d012703768500cf2f9b7c94b958c975aff7b56c0
-generated: "2026-02-17T15:03:58.302216992+11:00"
+digest: sha256:47b278ed8db709ae77f9e87d56cb4266dd660fb0fa3194da2e0a099874684faf
+generated: "2026-02-19T11:43:32.59703801Z"

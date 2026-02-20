@@ -1,0 +1,54 @@
+{{- if .Values.global.includeOtelLgtm }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-otel-lgtm
+  labels:
+    app: otel-lgtm
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+  selector:
+    app: otel-lgtm
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-otel-lgtm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-lgtm
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: otel-lgtm
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: otel-lgtm
+          image: {{ .Values.infra.otelLgtm.image }}
+          ports:
+            - containerPort: 3000
+            - containerPort: 4317
+            - containerPort: 4318
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10
+{{- end }}

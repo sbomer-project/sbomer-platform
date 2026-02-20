@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-otel-helpers
+  labels:
+    app: sbomer-otel-helpers
+    release: {{ .Release.Name }}
+data:
+  otel-helpers.sh: |
+{{ .Files.Get "files/otel-helpers.sh" | indent 4 }}

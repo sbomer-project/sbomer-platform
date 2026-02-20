@@ -7,13 +7,13 @@ appVersion: "1.0.0"
 
 dependencies:
   - name: manifest-storage-service-chart
-    version: 0.1.12
+    version: 0.1.15
     repository: "oci://quay.io/sbomer"
   - name: sbom-service-chart
-    version: 0.1.17
+    version: 0.1.19
     repository: "oci://quay.io/sbomer"
   - name: syft-generator-chart
-    version: 0.1.10
+    version: 0.1.11
     repository: "oci://quay.io/sbomer"
   - name: ui-chart
     version: 0.1.20

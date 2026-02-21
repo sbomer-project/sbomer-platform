@@ -10,6 +10,6 @@ dependencies:
   version: 0.1.11
 - name: ui-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.20
-digest: sha256:82c90579295547b93e653631e281c011b55d3ec651d5a19b640e9b966277a908
-generated: "2026-02-20T15:49:23.639498428+11:00"
+  version: 0.1.21
+digest: sha256:0afcf333cd01e6836d922eb00675e81c566b21c1baeeaeb44e7d32dec82688aa
+generated: "2026-02-21T07:00:25.126056373Z"

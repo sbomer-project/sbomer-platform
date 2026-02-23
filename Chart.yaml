@@ -18,3 +18,7 @@ dependencies:
   - name: ui-chart
     version: 0.1.20
     repository: "oci://quay.io/sbomer"
+  - name: dependency-track
+    version: 0.41.0
+    repository: "https://dependencytrack.github.io/helm-charts"
+    condition: global.includeDependencyTrack

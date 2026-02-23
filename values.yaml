@@ -11,6 +11,7 @@ global:
   # OWASP Dependency Track Instance for uploading/publishing SBOMs, false by default because it is resource intensive
   # Meant for testing publisher components
   includeDependencyTrack: false
+  includeOtelLgtm: true
 
 wiremock:
   # Additional configmaps for wiremock can be attached by overriding this by the parent chart
@@ -66,7 +67,10 @@ infra:
     storage:
       size: 5Gi
       persistenceEnabled: false
-  # UNLEASHED CONFIG
+  # OTEL LGTM CONFIG (Grafana + Loki + Tempo + Mimir + OpenTelemetry Collector)
+  otelLgtm:
+    image: grafana/otel-lgtm:latest
+  # UNLEASH CONFIG
   unleash:
     db:
       image: quay.io/fedora/postgresql-16:latest
@@ -91,6 +95,9 @@ infra:
 
 manifest-storage-service-chart:
   config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
     storagePublicApiUrl: "http://localhost:8080"
     kafka:
       # In K8s, the host is the Service name.
@@ -106,6 +113,9 @@ manifest-storage-service-chart:
 
 sbom-service-chart:
   config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
     kafka:
       bootstrapServers: "sbomer-release-kafka:9092"
       schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
@@ -113,7 +123,13 @@ sbom-service-chart:
       existingSecret: "sbomer-release-status-db-secret"
 
 syft-generator-chart:
+  task:
+    otel:
+      endpoint: "http://sbomer-release-otel-lgtm:4318" # HTTP only
   config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
     kafka:
       bootstrapServers: "sbomer-release-kafka:9092"
       schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"

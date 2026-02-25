@@ -6,17 +6,22 @@
 # Step-level spans support custom span attributes via key=value pairs on otel_start_span.
 # Required env vars: OTEL_SERVICE_NAME, OTEL_SERVICE_VERSION, OTEL_EXPORTER_OTLP_ENDPOINT, TRACEPARENT
 
-# Resource attributes JSON array, computed once at load time.
+# Resource attributes JSON array.
+# Called by otel_start_span.
 # Used by otel_send_span, otel_log, and otel_gauge.
-OTEL_RESOURCE=$(jq -nc \
-  --arg service "$OTEL_SERVICE_NAME" \
-  --arg version "${OTEL_SERVICE_VERSION:-unknown}" \
-  --arg hostname "${HOSTNAME:-unknown}" '
-  [{key:"service.name",value:{stringValue:$service}},
-   {key:"service.version",value:{stringValue:$version}},
-   {key:"host.name",value:{stringValue:$hostname}},
-   {key:"telemetry.sdk.language",value:{stringValue:"bash"}},
-   {key:"telemetry.sdk.name",value:{stringValue:"bash-otel"}}]')
+otel_resource() {
+  OTEL_RESOURCE=$(jq -nc \
+    --arg service "$OTEL_SERVICE_NAME" \
+    --arg version "${OTEL_SERVICE_VERSION:-unknown}" \
+    --arg hostname "${HOSTNAME:-unknown}" \
+    --arg step "step-$STEP_SPAN_NAME" '
+    [{key:"service.name",value:{stringValue:$service}},
+     {key:"service.version",value:{stringValue:$version}},
+     {key:"host.name",value:{stringValue:$hostname}},
+     {key:"telemetry.sdk.language",value:{stringValue:"bash"}},
+     {key:"telemetry.sdk.name",value:{stringValue:"bash-otel"}},
+     {key:"step.name",value:{stringValue:$step}}]')
+}
 
 # POSTs JSON payload to $OTEL_EXPORTER_OTLP_ENDPOINT/<path>.
 # Backgrounded (&) so script doesn't block waiting for OTel collector.
@@ -67,6 +72,7 @@ otel_send_span() {
 # new child span ID.
 # Uses STEP_-prefixed vars so nested otel_trace calls don't overwrite them.
 # Updates TRACEPARENT so downstream commands (e.g. curl with -H traceparent) propagate new context.
+# Calls otel_resource to build OTEL_RESOURCE with step.name included.
 # Extracts generation.id from key=value args into STEP_GENERATION_ID, which is inherited by
 # child spans created via otel_trace.
 # Must be paired with otel_end_span, typically via: trap 'otel_end_span $?' EXIT
@@ -83,6 +89,7 @@ otel_start_span() {
     case "$arg" in generation.id=*) STEP_GENERATION_ID="${arg#generation.id=}" ;; esac
   done
   STEP_SPAN_START=$(date +%s%N)
+  otel_resource
   export TRACEPARENT="00-${STEP_TRACE_ID}-${STEP_SPAN_ID}-${STEP_TRACE_FLAGS}"
 }
 

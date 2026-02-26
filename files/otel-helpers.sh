@@ -3,8 +3,9 @@
 # OTel bash tracing, logging, and metrics helpers for Tekton task steps.
 # Sends spans, logs, and metrics to OTLP HTTP/JSON endpoint via curl.
 # All telemetry includes resource attributes (service.name, service.version, host.name, step.name, telemetry.sdk.language, telemetry.sdk.name).
-# Span attributes (step.name + key=value pairs from otel_start_span) are inherited by child spans, logs, and metrics.
-# Metrics use sbomer.taskrun.<category>.<measurement> naming and delta counter type for exemplar support.
+# Span attributes (step.name + key=value pairs from otel_start_span) are inherited by child spans and logs.
+# Metrics use sbomer.taskrun.<category>.<measurement> naming, cumulative counter type, and only step.name as
+# datapoint attribute (not full span attributes) so metric labels stay within the set of Loki stream labels.
 # Required env vars: OTEL_SERVICE_NAME, OTEL_SERVICE_VERSION, OTEL_EXPORTER_OTLP_ENDPOINT, TRACEPARENT
 
 # Resource attributes JSON array.
@@ -74,8 +75,8 @@ otel_send_span() {
 # Uses STEP_-prefixed vars so nested otel_trace calls don't overwrite them.
 # Updates TRACEPARENT so downstream commands (e.g. curl with -H traceparent) propagate new context.
 # Calls otel_resource to build OTEL_RESOURCE with step.name included.
-# Span attributes (STEP_SPAN_ATTRS) are inherited by child spans (otel_trace),
-# log record attributes (otel_log), and datapoint attributes (otel_metric).
+# Span attributes (STEP_SPAN_ATTRS) are inherited by child spans (otel_trace)
+# and log record attributes (otel_log). Metrics only use step.name (see otel_metric).
 # Must be paired with otel_end_span, typically via: trap 'otel_end_span $?' EXIT
 # Args: span_name [key=value...] - span_name is auto-prefixed with 'step-'. key=value pairs are sent as span attributes.
 otel_start_span() {
@@ -188,10 +189,15 @@ otel_log() {
 # Query with last_over_time() for exact values (increase() extrapolates).
 # Uses Sum with cumulative temporality so exemplars are preserved in Prometheus/Mimir (gauge exemplars are dropped).
 # Exemplar on the real data point links to the current trace/span.
-# Includes all span attributes from otel_start_span as datapoint attributes.
+# Only includes step.name as datapoint attribute (not full span attributes) so metric labels
+# stay within the set of Loki stream labels — Metrics Drilldown Related Logs requires ALL
+# metric labels to exist in Loki. High-cardinality span attributes (generation.id, image, etc.)
+# are available via exemplar -> trace drill-down and in log structured metadata.
 # Must be called after otel_start_span.
 # Args: metric_name, value (integer)
 otel_metric() {
+  local metric_attrs
+  metric_attrs=$(jq -nc --arg step "$STEP_SPAN_NAME" '[{key:"step.name",value:{stringValue:$step}}]')
   local metric_json
   metric_json=$(jq -nc \
     --argjson resource "$OTEL_RESOURCE" \
@@ -201,7 +207,7 @@ otel_metric() {
     --argjson value "$2" \
     --arg start_time "$STEP_SPAN_START" \
     --arg time "$(date +%s%N)" \
-    --argjson attrs "$STEP_SPAN_ATTRS" '
+    --argjson attrs "$metric_attrs" '
     {resourceMetrics:[{
       resource:{attributes:$resource},
       scopeMetrics:[{scope:{name:"bash-otel"},metrics:[{

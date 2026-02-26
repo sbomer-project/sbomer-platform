@@ -2,13 +2,14 @@
 
 # OTel bash tracing, logging, and metrics helpers for Tekton task steps.
 # Sends spans, logs, and metrics to OTLP HTTP/JSON endpoint via curl.
-# All telemetry include resource attributes (service.name, service.version, host.name, step.name, telemetry.sdk.language, telemetry.sdk.name).
+# All telemetry includes resource attributes (service.name, service.version, host.name, step.name, telemetry.sdk.language, telemetry.sdk.name).
 # Span attributes (step.name + key=value pairs from otel_start_span) are inherited by child spans, logs, and metrics.
+# Metrics use sbomer.taskrun.<category>.<measurement> naming and delta counter type for exemplar support.
 # Required env vars: OTEL_SERVICE_NAME, OTEL_SERVICE_VERSION, OTEL_EXPORTER_OTLP_ENDPOINT, TRACEPARENT
 
 # Resource attributes JSON array.
 # Called by otel_start_span.
-# Used by otel_send_span, otel_log, and otel_gauge.
+# Used by otel_send_span, otel_log, and otel_metric.
 otel_resource() {
   OTEL_RESOURCE=$(jq -nc \
     --arg service "$OTEL_SERVICE_NAME" \
@@ -74,7 +75,7 @@ otel_send_span() {
 # Updates TRACEPARENT so downstream commands (e.g. curl with -H traceparent) propagate new context.
 # Calls otel_resource to build OTEL_RESOURCE with step.name included.
 # Span attributes (STEP_SPAN_ATTRS) are inherited by child spans (otel_trace),
-# log record attributes (otel_log), and datapoint attributes (otel_gauge).
+# log record attributes (otel_log), and datapoint attributes (otel_metric).
 # Must be paired with otel_end_span, typically via: trap 'otel_end_span $?' EXIT
 # Args: span_name [key=value...] - span_name is auto-prefixed with 'step-'. key=value pairs are sent as span attributes.
 otel_start_span() {
@@ -182,11 +183,13 @@ otel_log() {
   otel_send "v1/logs" "$log_json"
 }
 
-# Sends single gauge data point with exemplar linking to current trace/span.
+# Sends single delta counter data point with exemplar linking to current trace/span.
+# Uses Sum with delta temporality so exemplars are preserved in Prometheus/Mimir (gauge exemplars are dropped).
+# Metric names get _total suffix. Query with increase() for per-TaskRun values.
 # Includes all span attributes from otel_start_span as datapoint attributes.
 # Must be called after otel_start_span.
 # Args: metric_name, value (integer)
-otel_gauge() {
+otel_metric() {
   local metric_json
   metric_json=$(jq -nc \
     --argjson resource "$OTEL_RESOURCE" \
@@ -200,14 +203,16 @@ otel_gauge() {
       resource:{attributes:$resource},
       scopeMetrics:[{scope:{name:"bash-otel"},metrics:[{
         name:$name,
-        gauge:{dataPoints:[{
-          asInt:($value | tostring),
-          timeUnixNano:$time,
-          traceId:$trace_id,
-          spanId:$span_id,
-          attributes:$attrs,
-          exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]
-        }]}
+        sum:{
+          dataPoints:[{
+            asInt:($value | tostring),
+            timeUnixNano:$time,
+            attributes:$attrs,
+            exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]
+          }],
+          aggregationTemporality:1,
+          isMonotonic:true
+        }
       }]}]
     }]}') || return 0
   otel_send "v1/metrics" "$metric_json"

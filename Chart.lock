@@ -7,12 +7,12 @@ dependencies:
   version: 0.1.21
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.12
+  version: 0.1.13
 - name: ui-chart
   repository: oci://quay.io/sbomer
   version: 0.1.20
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:bff48b1620ea7a5132355f5fcc0b850e978eaa7262b6928d69771ccc82cdd9ea
-generated: "2026-02-25T14:35:57.439275597+11:00"
+digest: sha256:efd99c097563c1dc2fd09bdc0097698ae2c0504138b53b7a79c8d10d410570bf
+generated: "2026-02-26T17:32:29.22007783+11:00"

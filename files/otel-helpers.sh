@@ -2,8 +2,8 @@
 
 # OTel bash tracing, logging, and metrics helpers for Tekton task steps.
 # Sends spans, logs, and metrics to OTLP HTTP/JSON endpoint via curl.
-# All telemetry include resource attributes (service.name, service.version, host.name, telemetry.sdk.language, telemetry.sdk.name).
-# Step-level spans support custom span attributes via key=value pairs on otel_start_span.
+# All telemetry include resource attributes (service.name, service.version, host.name, step.name, telemetry.sdk.language, telemetry.sdk.name).
+# Span attributes (step.name + key=value pairs from otel_start_span) are inherited by child spans, logs, and metrics.
 # Required env vars: OTEL_SERVICE_NAME, OTEL_SERVICE_VERSION, OTEL_EXPORTER_OTLP_ENDPOINT, TRACEPARENT
 
 # Resource attributes JSON array.
@@ -14,7 +14,7 @@ otel_resource() {
     --arg service "$OTEL_SERVICE_NAME" \
     --arg version "${OTEL_SERVICE_VERSION:-unknown}" \
     --arg hostname "${HOSTNAME:-unknown}" \
-    --arg step "step-$STEP_SPAN_NAME" '
+    --arg step "$STEP_SPAN_NAME" '
     [{key:"service.name",value:{stringValue:$service}},
      {key:"service.version",value:{stringValue:$version}},
      {key:"host.name",value:{stringValue:$hostname}},
@@ -67,27 +67,23 @@ otel_send_span() {
   otel_send "v1/traces" "$span_json"
 }
 
-# Opens step-level parent span (e.g. 'inspect', 'generate', 'upload').
+# Opens step-level parent span (e.g. 'step-inspect', 'step-generate', 'step-upload').
 # Parses TRACEPARENT (W3C traceparent header: 00-<trace_id>-<span_id>-<trace_flags>) and creates
 # new child span ID.
 # Uses STEP_-prefixed vars so nested otel_trace calls don't overwrite them.
 # Updates TRACEPARENT so downstream commands (e.g. curl with -H traceparent) propagate new context.
 # Calls otel_resource to build OTEL_RESOURCE with step.name included.
-# Extracts generation.id from key=value args into STEP_GENERATION_ID, which is inherited by
-# child spans created via otel_trace.
+# Span attributes (STEP_SPAN_ATTRS) are inherited by child spans (otel_trace),
+# log record attributes (otel_log), and datapoint attributes (otel_gauge).
 # Must be paired with otel_end_span, typically via: trap 'otel_end_span $?' EXIT
-# Args: span_name [key=value...] - key=value pairs are sent as span attributes on OTLP span.
+# Args: span_name [key=value...] - span_name is auto-prefixed with 'step-'. key=value pairs are sent as span attributes.
 otel_start_span() {
   STEP_TRACE_ID="${TRACEPARENT:3:32}"
   STEP_PARENT_SPAN_ID="${TRACEPARENT:36:16}"
   STEP_TRACE_FLAGS="${TRACEPARENT:53:2}"
   STEP_SPAN_ID=$(openssl rand -hex 8)
-  STEP_SPAN_NAME="$1"; shift
-  STEP_SPAN_ATTRS=$(otel_attrs "$@")
-  STEP_GENERATION_ID=""
-  for arg in "$@"; do
-    case "$arg" in generation.id=*) STEP_GENERATION_ID="${arg#generation.id=}" ;; esac
-  done
+  STEP_SPAN_NAME="step-$1"; shift
+  STEP_SPAN_ATTRS=$(otel_attrs "step.name=$STEP_SPAN_NAME" "$@")
   STEP_SPAN_START=$(date +%s%N)
   otel_resource
   export TRACEPARENT="00-${STEP_TRACE_ID}-${STEP_SPAN_ID}-${STEP_TRACE_FLAGS}"
@@ -109,7 +105,7 @@ otel_end_span() {
 # Saves and restores TRACEPARENT so sibling commands get correct parent.
 # Wrapped command receives updated TRACEPARENT for further propagation.
 # Captures and propagates original exit code - maps it to OTLP status.
-# Inherits generation.id from parent step span (set by otel_start_span).
+# Inherits all span attributes from parent step span (set by otel_start_span).
 # Args: span_name, command...
 otel_trace() {
   local span_name="$1"; shift
@@ -120,10 +116,6 @@ otel_trace() {
   span_id=$(openssl rand -hex 8)
   local span_start
   span_start=$(date +%s%N)
-  local span_attrs='[]'
-  if [ -n "$STEP_GENERATION_ID" ]; then
-    span_attrs=$(otel_attrs "generation.id=$STEP_GENERATION_ID")
-  fi
   local parent_traceparent="$TRACEPARENT"
   TRACEPARENT="00-${trace_id}-${span_id}-${trace_flags}"
   local exit_code
@@ -131,7 +123,7 @@ otel_trace() {
   TRACEPARENT="$parent_traceparent"
   local status_code
   status_code=$([ "$exit_code" -ne 0 ] && echo 2 || echo 1)
-  otel_send_span "$trace_id" "$span_id" "$parent_span_id" "$span_name" "$span_start" "$(date +%s%N)" "$status_code" "$span_attrs"
+  otel_send_span "$trace_id" "$span_id" "$parent_span_id" "$span_name" "$span_start" "$(date +%s%N)" "$status_code" "$STEP_SPAN_ATTRS"
   return $exit_code
 }
 
@@ -164,6 +156,7 @@ retry() {
 
 # Sends single log line as OTLP log record.
 # Includes STEP_TRACE_ID and STEP_SPAN_ID so logs are correlated with step's span.
+# Includes all span attributes from otel_start_span as log record attributes.
 # Must be called after otel_start_span.
 # Args: log_line
 otel_log() {
@@ -173,7 +166,8 @@ otel_log() {
     --arg trace_id "$STEP_TRACE_ID" \
     --arg span_id "$STEP_SPAN_ID" \
     --arg body "$1" \
-    --arg time "$(date +%s%N)" '
+    --arg time "$(date +%s%N)" \
+    --argjson attrs "$STEP_SPAN_ATTRS" '
     {resourceLogs:[{
       resource:{attributes:$resource},
       scopeLogs:[{scope:{name:"bash-otel"},logRecords:[{
@@ -181,14 +175,15 @@ otel_log() {
         observedTimeUnixNano:$time,
         body:{stringValue:$body},
         traceId:$trace_id,
-        spanId:$span_id
+        spanId:$span_id,
+        attributes:$attrs
       }]}]
     }]}') || return 0
   otel_send "v1/logs" "$log_json"
 }
 
-# Sends single gauge data point.
-# Includes STEP_TRACE_ID and STEP_SPAN_ID so metrics are correlated with step's span.
+# Sends single gauge data point with exemplar linking to current trace/span.
+# Includes all span attributes from otel_start_span as datapoint attributes.
 # Must be called after otel_start_span.
 # Args: metric_name, value (integer)
 otel_gauge() {
@@ -199,7 +194,8 @@ otel_gauge() {
     --arg span_id "$STEP_SPAN_ID" \
     --arg name "$1" \
     --argjson value "$2" \
-    --arg time "$(date +%s%N)" '
+    --arg time "$(date +%s%N)" \
+    --argjson attrs "$STEP_SPAN_ATTRS" '
     {resourceMetrics:[{
       resource:{attributes:$resource},
       scopeMetrics:[{scope:{name:"bash-otel"},metrics:[{
@@ -208,7 +204,9 @@ otel_gauge() {
           asInt:($value | tostring),
           timeUnixNano:$time,
           traceId:$trace_id,
-          spanId:$span_id
+          spanId:$span_id,
+          attributes:$attrs,
+          exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]
         }]}
       }]}]
     }]}') || return 0

@@ -184,7 +184,7 @@ otel_log() {
 }
 
 # Sends single delta counter data point with exemplar linking to current trace/span.
-# Uses Sum with delta temporality so exemplars are preserved in Prometheus/Mimir (gauge exemplars are dropped).
+# Uses Sum with cumulative temporality so exemplars are preserved in Prometheus/Mimir (gauge exemplars are dropped).
 # Metric names get _total suffix. Query with increase() for per-TaskRun values.
 # Includes all span attributes from otel_start_span as datapoint attributes.
 # Must be called after otel_start_span.
@@ -210,7 +210,7 @@ otel_metric() {
             attributes:$attrs,
             exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]
           }],
-          aggregationTemporality:1,
+          aggregationTemporality:2,
           isMonotonic:true
         }
       }]}]

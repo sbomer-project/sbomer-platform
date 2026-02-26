@@ -16,7 +16,7 @@ dependencies:
     version: 0.1.13
     repository: "oci://quay.io/sbomer"
   - name: ui-chart
-    version: 0.1.20
+    version: 0.1.23
     repository: "oci://quay.io/sbomer"
   - name: dependency-track
     version: 0.41.0

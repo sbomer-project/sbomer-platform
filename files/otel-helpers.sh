@@ -183,9 +183,11 @@ otel_log() {
   otel_send "v1/logs" "$log_json"
 }
 
-# Sends single delta counter data point with exemplar linking to current trace/span.
+# Sends cumulative counter with two data points: zero at span start, real value now.
+# Two points are needed so the metric appears in Metrics Drilldown (single-point counters return no data).
+# Query with last_over_time() for exact values (increase() extrapolates).
 # Uses Sum with cumulative temporality so exemplars are preserved in Prometheus/Mimir (gauge exemplars are dropped).
-# Metric names get _total suffix. Query with increase() for per-TaskRun values.
+# Exemplar on the real data point links to the current trace/span.
 # Includes all span attributes from otel_start_span as datapoint attributes.
 # Must be called after otel_start_span.
 # Args: metric_name, value (integer)
@@ -197,6 +199,7 @@ otel_metric() {
     --arg span_id "$STEP_SPAN_ID" \
     --arg name "$1" \
     --argjson value "$2" \
+    --arg start_time "$STEP_SPAN_START" \
     --arg time "$(date +%s%N)" \
     --argjson attrs "$STEP_SPAN_ATTRS" '
     {resourceMetrics:[{
@@ -204,12 +207,11 @@ otel_metric() {
       scopeMetrics:[{scope:{name:"bash-otel"},metrics:[{
         name:$name,
         sum:{
-          dataPoints:[{
-            asInt:($value | tostring),
-            timeUnixNano:$time,
-            attributes:$attrs,
-            exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]
-          }],
+          dataPoints:[
+            {asInt:"0",timeUnixNano:$start_time,attributes:$attrs},
+            {asInt:($value | tostring),timeUnixNano:$time,attributes:$attrs,
+             exemplars:[{timeUnixNano:$time,traceId:$trace_id,spanId:$span_id,asInt:($value | tostring)}]}
+          ],
           aggregationTemporality:2,
           isMonotonic:true
         }

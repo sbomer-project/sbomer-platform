@@ -7,6 +7,7 @@ global:
   includeStatusDb: true
   includeS3: true
   includeMockServices: true
+  # unleash uses statusdb as its database, so statusdb also must be set to true to use this, or change to own db
   includeUnleash: true
   # OWASP Dependency Track Instance for uploading/publishing SBOMs, false by default because it is resource intensive
   # Meant for testing publisher components
@@ -73,7 +74,6 @@ infra:
   # UNLEASH CONFIG
   unleash:
     db:
-      image: quay.io/fedora/postgresql-16:latest
       name: unleash
       username: unleash_user
       password: unleash_password

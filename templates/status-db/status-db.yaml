@@ -23,28 +23,39 @@ spec:
             - containerPort: 5432
               name: postgres
           env:
+            # --- STANDARD STATUS-DB VARS ---
             - name: POSTGRESQL_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-status-db-secret
-                  key: postgres-db-name
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-status-db-secret, key: postgres-db-name } }
             - name: POSTGRESQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-status-db-secret
-                  key: postgres-username
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-status-db-secret, key: postgres-username } }
             - name: POSTGRESQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-status-db-secret
-                  key: postgres-password
-          # Use ephemeral storage for local dev
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-status-db-secret, key: postgres-password } }
+
+            # --- EXTENSION: UNLEASH VARS ---
+            # We inject these only if Unleash is enabled
+            {{- if .Values.global.includeUnleash }}
+            - name: UNLEASH_DB_NAME
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-unleash-secret, key: postgres-db-name } }
+            - name: UNLEASH_DB_USER
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-unleash-secret, key: postgres-username } }
+            - name: UNLEASH_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-unleash-secret, key: postgres-password } }
+            {{- end }}
+
           volumeMounts:
-            - name: db-data
-              mountPath: /var/lib/pgsql/data
+            - name: additional-dbs
+              # CHANGE THIS LINE:
+              mountPath: /opt/app-root/src/postgresql-init/01-create-additional-dbs.sh
+              subPath: 01-create-additional-dbs.sh
+
       volumes:
         - name: db-data
           emptyDir: {}
+        # --- CONFIGMAP VOLUME ---
+        - name: additional-dbs
+          configMap:
+            name: {{ .Release.Name }}-additional-dbs-init-script
+            defaultMode: 0755
 ---
 apiVersion: v1
 kind: Service

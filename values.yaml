@@ -121,9 +121,9 @@ sbom-service-chart:
       schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
     database:
       existingSecret: "sbomer-release-status-db-secret"
-    # Override these values with top-level helm chart name and version, explicitly inject during helm install
+    # Override these values with top-level helm chart name/url and version, explicitly inject during helm install
     system:
-      name: undefined
+      release: undefined
       version: undefined
 
 syft-generator-chart:

@@ -39,6 +39,14 @@ data:
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             }
+
+            # --- LEGACE SBOM SERVICE ENDPOINTS (v1beta1 endpoints like /stats that some legacy components depend on) ---
+            location /api/v1beta1/ {
+                proxy_pass http://{{ .Release.Name }}-sbom-service-chart:8080;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            }
             
             # --- QUARKUS ENDPOINTS FOR SBOM SERVICE ---
             location /q/swagger-ui {

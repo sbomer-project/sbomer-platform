@@ -4,7 +4,7 @@ dependencies:
   version: 0.1.15
 - name: sbom-service-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.21
+  version: 0.1.22
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.13
@@ -14,5 +14,5 @@ dependencies:
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:efd99c097563c1dc2fd09bdc0097698ae2c0504138b53b7a79c8d10d410570bf
-generated: "2026-02-26T17:32:29.22007783+11:00"
+digest: sha256:6a43568860433e7943e1508d35147497ad26696f52b7021e531ae6c9ac9b9faa
+generated: "2026-03-05T09:27:44.892590703Z"

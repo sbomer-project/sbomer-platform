@@ -1,0 +1,82 @@
+{{- if .Values.global.includeKafkaUI }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-kafka-ui
+  labels:
+    app: kafka-ui
+    release: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.infra.kafkaUI.service.port }}
+      targetPort: 8080
+      name: http
+  selector:
+    app: kafka-ui
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-kafka-ui
+  labels:
+    app: kafka-ui
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: kafka-ui
+          image: {{ .Values.infra.kafkaUI.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: DYNAMIC_CONFIG_ENABLED
+              value: "true"
+            - name: SERVER_SERVLET_CONTEXT_PATH
+              value: "/kafka-ui"
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: {{ (index .Values.infra.kafkaUI.kafka.clusters 0).name | quote }}
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: {{ (index .Values.infra.kafkaUI.kafka.clusters 0).bootstrapServers | quote }}
+            {{- if (index .Values.infra.kafkaUI.kafka.clusters 0).schemaRegistry }}
+            - name: KAFKA_CLUSTERS_0_SCHEMAREGISTRY
+              value: {{ (index .Values.infra.kafkaUI.kafka.clusters 0).schemaRegistry | quote }}
+            {{- end }}
+            {{- range $index, $cluster := .Values.infra.kafkaUI.kafka.clusters }}
+            {{- if gt $index 0 }}
+            - name: KAFKA_CLUSTERS_{{ $index }}_NAME
+              value: {{ $cluster.name | quote }}
+            - name: KAFKA_CLUSTERS_{{ $index }}_BOOTSTRAPSERVERS
+              value: {{ $cluster.bootstrapServers | quote }}
+            {{- if $cluster.schemaRegistry }}
+            - name: KAFKA_CLUSTERS_{{ $index }}_SCHEMAREGISTRY
+              value: {{ $cluster.schemaRegistry | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /kafka-ui/actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /kafka-ui/actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+{{- end }}

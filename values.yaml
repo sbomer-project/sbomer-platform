@@ -2,6 +2,7 @@
 global:
   # Include basic infrastructure setup (mainly for local development)
   includeKafka: true
+  includeKafkaUI: true
   includeApicurio: true
   includeApiGateway: true
   includeStatusDb: true
@@ -35,6 +36,18 @@ infra:
   kafka:
     image: quay.io/strimzi/kafka:latest-kafka-3.7.0
     storageClass: "standard"
+
+  #Kafka UI
+  kafkaUI:
+    image: provectuslabs/kafka-ui:latest
+    service:
+     port: 8080
+    kafka:
+      clusters:
+        - name: sbomer-kafka
+          bootstrapServers: "sbomer-release-kafka:9092"
+          schemaRegistry: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+          
   # APICURIO CONFIG
   apicurio:
     image: quay.io/apicurio/apicurio-registry:latest

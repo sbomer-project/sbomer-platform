@@ -12,6 +12,7 @@ global:
   # OWASP Dependency Track Instance for uploading/publishing SBOMs, false by default because it is resource intensive
   # Meant for testing publisher components
   includeDependencyTrack: false
+  includeDependencyTrackPublisher: false
   includeOtelLgtm: true
 
 wiremock:
@@ -164,3 +165,22 @@ ui-chart:
   config:
     # override to connect to backend of your choice
     apiUrl: http://localhost:8080
+
+dtrack-publisher-chart:
+  config:
+    otel:
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
+    kafka:
+      bootstrapServers: "sbomer-release-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    dtrack:
+      # If includeDependencyTrack is true, this points to the internal API server
+      # provisioned by the official dependency-track Helm chart.
+      apiUrl: "http://sbomer-release-dependency-track-api-server:8080"
+    storage:
+      # Reuses the exact same storage URL format you used for the syft-generator
+      internalUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+  secret:
+    # This assumes your umbrella chart will create a secret with this name
+    name: "sbomer-release-dtrack-secret"
+    keyName: "api-key"

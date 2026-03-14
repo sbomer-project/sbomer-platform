@@ -13,6 +13,6 @@ dependencies:
   version: 0.1.24
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
-  version: 0.41.0
-digest: sha256:72ca16613c4229f845b8c2262f6dac82e824cfc5c1454637066caab3b62fa28e
-generated: "2026-03-05T11:51:27.148330047+01:00"
+  version: 0.43.0
+digest: sha256:40063bd601844f786bedbbbd1d044f69a9a4a4065e27353bb9aa5e40537354e0
+generated: "2026-03-14T18:07:12.632604667Z"

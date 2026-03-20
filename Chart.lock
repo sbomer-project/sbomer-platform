@@ -13,12 +13,12 @@ dependencies:
   version: 0.1.1
 - name: ui-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.25
+  version: 0.1.35
 - name: dtrack-publisher-chart
   repository: oci://quay.io/sbomer
   version: 0.1.1
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:3da3abac305aa1c552d2e9e44fab441a1e04dc25403e99b8ee9f84e45d09ed6a
-generated: "2026-03-20T15:00:08.614328+01:00"
+digest: sha256:fea0a1b991b8b6f5914242056e6946307a53c5462ba27010aceee7de83280dcf
+generated: "2026-03-20T14:22:30.098715738Z"

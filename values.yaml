@@ -140,6 +140,33 @@ sbom-service-chart:
       release: undefined
       version: undefined
 
+  recipeConfig:
+    override:
+      # Override Recipes here to better represent what sbomer-platform actually includes
+      recipes:
+        - type: CONTAINER_IMAGE
+          generator:
+            name: syft-generator
+            version: 1.0.0
+          enhancers: [ ]  # Empty for now, can add later
+
+        - type: MAVEN
+          generator:
+            name: java-generator
+            version: 1.0.0
+            options:
+              type: cdx-maven-plugin-generator
+          enhancers: [ ]  # Empty for now, can add later
+
+        - type: DOMINO
+          generator:
+            name: java-generator
+            version: 1.0.0
+            options:
+              type: domino-generator
+              args: "--warn-on-missing-scm --legacy-scm-locator --hashes=false --warn-on-resolution-errors"
+          enhancers: [ ]  # Empty for now, can add later
+
 syft-generator-chart:
   task:
     otel:
@@ -156,6 +183,26 @@ syft-generator-chart:
     # otherwise point to the internal K8s API service:
     quarkus:
       kubernetesClientMasterUrl: "https://kubernetes.default.svc" 
+      trustCerts: "false" # Should be false in prod, true in dev
+    # Default internal cluster URL for storage
+    storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+
+java-generator-chart:
+  task:
+    otel:
+      endpoint: "http://sbomer-release-otel-lgtm:4318" # HTTP only
+  config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
+    kafka:
+      bootstrapServers: "sbomer-release-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    # In a real K8s cluster, we don't use 'host.containers.internal'.
+    # Quarkus usually auto-detects Kubernetes if RBAC is set up,
+    # otherwise point to the internal K8s API service:
+    quarkus:
+      kubernetesClientMasterUrl: "https://kubernetes.default.svc"
       trustCerts: "false" # Should be false in prod, true in dev
     # Default internal cluster URL for storage
     storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"

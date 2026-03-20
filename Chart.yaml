@@ -15,6 +15,9 @@ dependencies:
   - name: syft-generator-chart
     version: 0.1.15
     repository: "oci://quay.io/sbomer"
+  - name: java-generator-chart
+    version: 0.1.1
+    repository: "oci://quay.io/sbomer"
   - name: ui-chart
     version: 0.1.25
     repository: "oci://quay.io/sbomer"

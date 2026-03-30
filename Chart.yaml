@@ -10,19 +10,19 @@ dependencies:
     version: 0.1.15
     repository: "oci://quay.io/sbomer"
   - name: sbom-service-chart
-    version: 0.1.24
-    repository: "oci://quay.io/sbomer"
-  - name: syft-generator-chart
-    version: 0.1.15
-    repository: "oci://quay.io/sbomer"
-  - name: java-generator-chart
-    version: 0.1.1
-    repository: "oci://quay.io/sbomer"
-  - name: ui-chart
     version: 0.1.25
     repository: "oci://quay.io/sbomer"
+  - name: syft-generator-chart
+    version: 0.1.16
+    repository: "oci://quay.io/sbomer"
+  - name: java-generator-chart
+    version: 0.1.2
+    repository: "oci://quay.io/sbomer"
+  - name: ui-chart
+    version: 0.1.43
+    repository: "oci://quay.io/sbomer"
   - name: dtrack-publisher-chart
-    version: 0.1.1
+    version: 0.1.2
     repository: "oci://quay.io/sbomer"
     condition: global.includeDependencyTrackPublisher
   - name: dependency-track

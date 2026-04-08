@@ -16,11 +16,6 @@ spec:
       labels:
         app.kubernetes.io/name: unleash
     spec:
-      initContainers:
-        - name: wait-for-db
-          image: busybox
-          # Waits for the DB service to respond on port 5432
-          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-unleash-db 5432; do echo waiting for db; sleep 2; done;']
       containers:
         - name: unleash
           image: {{ .Values.infra.unleash.server.image }}
@@ -35,7 +30,7 @@ spec:
             - name: BASE_URI_PATH
               value: {{ .Values.infra.unleash.server.basePath | quote }}
             - name: DATABASE_HOST
-              value: {{ .Release.Name }}-unleash-db
+              value: {{ .Release.Name }}-status-db
             - name: DATABASE_SSL
               value: "false"
             - name: DATABASE_NAME

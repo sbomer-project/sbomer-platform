@@ -207,6 +207,21 @@ java-generator-chart:
     # Default internal cluster URL for storage
     storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
 
+dela-generator-chart:
+  config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
+    kafka:
+      bootstrapServers: "sbomer-release-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    storage:
+      internalUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+    pnc:
+      # Point this to the actual PNC API URL for the target environment.
+      # By default points to our mock endpoint for dev
+      apiUrl: "http://sbomer-release-wiremock:8080"
+
 # ui, configure to point to sbomer-service
 ui-chart:  
   config:

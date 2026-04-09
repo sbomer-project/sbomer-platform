@@ -150,6 +150,12 @@ sbom-service-chart:
             version: 1.0.0
           enhancers: [ ]  # Empty for now, can add later
 
+        - type: PNC_DELA
+          generator:
+            name: dela-generator
+            version: 1.0.0
+          enhancers: [ ]  # Empty for now, can add later
+
         - type: MAVEN
           generator:
             name: java-generator

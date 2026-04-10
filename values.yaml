@@ -150,6 +150,12 @@ sbom-service-chart:
             version: 1.0.0
           enhancers: [ ]  # Empty for now, can add later
 
+        - type: PNC_DELA
+          generator:
+            name: dela-generator
+            version: 1.0.0
+          enhancers: [ ]  # Empty for now, can add later
+
         - type: MAVEN
           generator:
             name: java-generator
@@ -206,6 +212,28 @@ java-generator-chart:
       trustCerts: "false" # Should be false in prod, true in dev
     # Default internal cluster URL for storage
     storageUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+
+dela-generator-chart:
+  config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
+    kafka:
+      bootstrapServers: "sbomer-release-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    storage:
+      internalUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+    pnc:
+      # Point this to the actual PNC API URL for the target environment.
+      # By default points to our mock endpoint for dev
+      apiUrl: "http://sbomer-release-wiremock:8080"
+    # Should be set by the parent helm chart, possibly helm chart name and version for tool properties
+    sbomMetadata:
+      toolName: "SBOMer NextGen"
+      toolVersion: "1.0.0"
+      supplierName: "Red Hat"
+      # For multiple URLs, separate with commas
+      supplierUrls: "https://redhat.com"
 
 # ui, configure to point to sbomer-service
 ui-chart:  

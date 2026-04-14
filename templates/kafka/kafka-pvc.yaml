@@ -1,0 +1,18 @@
+{{- if and .Values.global.includeKafka .Values.infra.kafka.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-kafka
+  labels:
+    app: kafka
+    release: {{ .Release.Name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.infra.kafka.storageClass }}
+  storageClassName: {{ .Values.infra.kafka.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.infra.kafka.persistence.size | quote }}
+{{- end }}

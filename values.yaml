@@ -37,6 +37,9 @@ infra:
   kafka:
     image: quay.io/strimzi/kafka:latest-kafka-3.7.0
     storageClass: "standard"
+    persistence:
+      enabled: false
+      size: 1Gi
 
   #Kafka UI
   kafkaUI:

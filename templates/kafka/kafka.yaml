@@ -57,5 +57,10 @@ spec:
           configMap:
             name: {{ .Release.Name }}-kafka-config
         - name: data
-          emptyDir: {} # Use PersistentVolumeClaim for persistence if needed
+{{- if .Values.infra.kafka.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-kafka
+{{- else }}
+          emptyDir: {} # Ephemeral storage for dev deployments
+{{- end }}
 {{- end }}

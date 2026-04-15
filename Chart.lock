@@ -11,6 +11,9 @@ dependencies:
 - name: java-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.2
+- name: dela-generator-chart
+  repository: oci://quay.io/sbomer
+  version: 0.1.1
 - name: ui-chart
   repository: oci://quay.io/sbomer
   version: 0.1.43
@@ -20,5 +23,5 @@ dependencies:
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:db74a5825d8db8802fc36c72d34481fc7a1d6820d73233a5012b814cd3c544ad
-generated: "2026-03-31T13:45:34.3690808+11:00"
+digest: sha256:594b5d9384e151cc9499edae69ffe5f56c123f2191c37f2710c96503acfbc501
+generated: "2026-04-15T09:17:22.805291+02:00"

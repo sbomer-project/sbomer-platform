@@ -165,6 +165,12 @@ sbom-service-chart:
             version: 1.0.0
           enhancers: [ ]  # Empty for now, can add later
 
+        - type: PNC_BUILD
+          generator:
+            name: pnc-generator
+            version: 1.0.0
+          enhancers: [ ]  # Empty for now, can add later
+
         - type: MAVEN
           generator:
             name: java-generator
@@ -242,6 +248,24 @@ dela-generator-chart:
       toolVersion: "1.0.0"
       supplierName: "Red Hat"
       # For multiple URLs, separate with commas
+      supplierUrls: "https://redhat.com"
+
+pnc-generator-chart:
+  config:
+    otel:
+      protocol: grpc
+      endpoint: "http://sbomer-release-otel-lgtm:4317"
+    kafka:
+      bootstrapServers: "sbomer-release-kafka:9092"
+      schemaRegistryUrl: "http://sbomer-release-apicurio:8080/apis/registry/v2"
+    storage:
+      internalUrl: "http://sbomer-release-manifest-storage-service-chart:8080"
+    pnc:
+      apiUrl: "http://sbomer-release-wiremock:8080"
+    sbomMetadata:
+      toolName: "SBOMer NextGen"
+      toolVersion: "1.0.0"
+      supplierName: "Red Hat"
       supplierUrls: "https://redhat.com"
 
 # ui, configure to point to sbomer-service

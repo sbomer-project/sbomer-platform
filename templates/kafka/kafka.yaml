@@ -46,6 +46,8 @@ spec:
             - |
               /opt/kafka/bin/kafka-storage.sh format --config /opt/kafka/config/server.properties --cluster-id 'ciVofVj9T9aU1a3S-n3CBA' --ignore-formatted
               /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+          resources:
+            {{- toYaml .Values.infra.kafka.resources | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /opt/kafka/config/server.properties
@@ -57,5 +59,10 @@ spec:
           configMap:
             name: {{ .Release.Name }}-kafka-config
         - name: data
-          emptyDir: {} # Use PersistentVolumeClaim for persistence if needed
+{{- if .Values.infra.kafka.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-kafka
+{{- else }}
+          emptyDir: {} # Ephemeral storage for dev deployments
+{{- end }}
 {{- end }}

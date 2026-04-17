@@ -14,6 +14,9 @@ dependencies:
 - name: dela-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.1
+- name: pnc-generator-chart
+  repository: oci://quay.io/sbomer
+  version: 0.1.1
 - name: ui-chart
   repository: oci://quay.io/sbomer
   version: 0.1.43
@@ -23,5 +26,5 @@ dependencies:
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:594b5d9384e151cc9499edae69ffe5f56c123f2191c37f2710c96503acfbc501
-generated: "2026-04-15T09:17:22.805291+02:00"
+digest: sha256:0c9a6935115bcc778d7ca4560bb2d89b5fca6e638c65e1336dbe203f23e141dc
+generated: "2026-04-17T12:11:57.096744+02:00"

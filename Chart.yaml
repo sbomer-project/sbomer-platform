@@ -25,7 +25,7 @@ dependencies:
     version: 0.1.1
     repository: "oci://quay.io/sbomer"
   - name: ui-chart
-    version: 0.1.43
+    version: 0.1.58
     repository: "oci://quay.io/sbomer"
   - name: dtrack-publisher-chart
     version: 0.1.3

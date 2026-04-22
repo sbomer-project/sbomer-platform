@@ -1,10 +1,10 @@
 dependencies:
 - name: manifest-storage-service-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.15
+  version: 0.1.16
 - name: sbom-service-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.25
+  version: 0.1.26
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.16
@@ -19,12 +19,12 @@ dependencies:
   version: 0.1.1
 - name: ui-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.43
+  version: 0.1.58
 - name: dtrack-publisher-chart
   repository: oci://quay.io/sbomer
   version: 0.1.3
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:0c9a6935115bcc778d7ca4560bb2d89b5fca6e638c65e1336dbe203f23e141dc
-generated: "2026-04-17T12:11:57.096744+02:00"
+digest: sha256:cec76034cd66744e4313a9f9f81d587ff84f15b83b5f3e4c5b4887b4786ad3d5
+generated: "2026-04-22T15:46:54.821421568+10:00"

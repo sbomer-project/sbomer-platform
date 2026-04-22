@@ -32,6 +32,6 @@ dependencies:
     repository: "oci://quay.io/sbomer"
     condition: global.includeDependencyTrackPublisher
   - name: dependency-track
-    version: 0.41.0
+    version: 0.44.0
     repository: "https://dependencytrack.github.io/helm-charts"
     condition: global.includeDependencyTrack

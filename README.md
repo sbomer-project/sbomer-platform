@@ -3,7 +3,7 @@ Helm Chart for the SBOMer Platform
 
 ## How to run locally
 
-- First, make sure Tekton is install on the minikube cluster we install this chart on
+- First, make sure Tekton Pipelines and Kueue are installed on the minikube cluster we install this chart on
 - Build the dependencies:
 ```script
 helm dependency update ./

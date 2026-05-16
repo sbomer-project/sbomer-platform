@@ -7,7 +7,7 @@ dependencies:
   version: 0.1.28
 - name: syft-generator-chart
   repository: oci://quay.io/sbomer
-  version: 0.1.20
+  version: 0.1.21
 - name: java-generator-chart
   repository: oci://quay.io/sbomer
   version: 0.1.4
@@ -26,5 +26,5 @@ dependencies:
 - name: dependency-track
   repository: https://dependencytrack.github.io/helm-charts
   version: 0.41.0
-digest: sha256:e5d7287c58a67158be157fd8359f679789c84f0c456ee566a0414cb0dc602f20
-generated: "2026-05-14T16:18:57.874323272+02:00"
+digest: sha256:02a042937f97b411f2eaa6bebcedeca100e317204fb4b7328f9d2ad5e4c692e4
+generated: "2026-05-16T10:40:46.364510876Z"
